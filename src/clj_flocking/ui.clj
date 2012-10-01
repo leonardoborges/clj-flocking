@@ -10,7 +10,7 @@
   (:use clj-flocking.vec.math))
 
 (defn mk-main-frame [width height]
-  (doto (JFrame. "Clojure flocking simulation demo")
+  (doto (JFrame. "Clojure flocking simulation demo - written by Leonardo Borges")
     (.setDefaultCloseOperation JFrame/EXIT_ON_CLOSE)
     (.setLayout (BorderLayout.))
     (-> (.getContentPane) (.setPreferredSize (Dimension. width height)))
