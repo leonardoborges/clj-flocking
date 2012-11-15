@@ -2,10 +2,12 @@
   "Flocking algorithm ported from http://processingjs.org/learning/topic/flocking"
   (:use [clj-flocking.ui]
         [clj-flocking.vec.helpers]
-        [clj-flocking.vec.math]
-        [clj-flocking.algo]
-        [clj-flocking.defaults])
+         [clj-flocking.defaults]
+        [quil.core])
   (:gen-class))
+
+
+;;(use 'clj-flocking.ui :reload)
 
 (defn mk-boid [location velocity]
   (atom {:location location
@@ -19,37 +21,15 @@
                         (mk-vec (- (* (Math/random) 2) 1)
                                 (- (* (Math/random) 2) 1))))))
 
+(def boids (mk-sample-boids 100))
 
-
-
-;; (swap! (:running @flocking-agent) (fn [old] false))
-(defn animate [world]
-  (while @(:running world)
-    (do (. Thread sleep 10)
-        (.repaint (:panel world))
-        (doseq [boid (:boids world)]
-          (step boid (:boids world)
-                (-> world :panel (.getWidth))
-                (-> world :panel (.getHeight))))))
-  world)
-
-
-(defn mk-world [boids panel]
-  {:running (atom true)
-   :boids boids
-   :panel panel})
 
 (defn -main
   [& args]
-  (let [boids (mk-sample-boids 100)
-        frame (mk-main-frame frame-width frame-height)
-        panel (mk-panel boids radius frame-width frame-height)
-        world (mk-world boids panel)
-        flocking-agent (agent world)]
-    (do
-      (doto frame
-        (-> (.getContentPane) (.add panel))
-        (.setVisible true))
-      (add-mouse-adapter panel flocking-agent animate (:running world))
-      (send-off flocking-agent animate))))
+  (let [boids (mk-sample-boids 100)]
+    (defsketch example
+      :title "Clojure flocking simulation demo - written by Leonardo Borges - @leonardo_borges"
+      :setup setup        
+      :draw #(draw boids)
+      :size [800 600])))
 

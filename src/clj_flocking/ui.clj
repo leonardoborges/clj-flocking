@@ -7,66 +7,34 @@
           java.awt.image.BufferedImage
           java.awt.geom.GeneralPath
           (java.awt.event MouseAdapter MouseEvent))
-  (:use clj-flocking.vec.math))
+  (:use clj-flocking.vec.math
+        clj-flocking.algo
+        clj-flocking.defaults
+        quil.core))
 
-(defn mk-main-frame [width height]
-  (doto (JFrame. "Clojure flocking simulation demo - written by Leonardo Borges")
-    (.setDefaultCloseOperation JFrame/EXIT_ON_CLOSE)
-    (.setLayout (BorderLayout.))
-    (-> (.getContentPane) (.setPreferredSize (Dimension. width height)))
-    (.pack)
-    (.setResizable false)
-    (.setLocationRelativeTo nil)))
+(defn setup []
+  (smooth)                 
+  (frame-rate 100)         
+  (background 255 255 255))
 
-(defn draw-boid [g boid radius]
-  (let [b @boid
-        boid-location (:location b)
-        boid-shape (doto (GeneralPath.)
-                     (.moveTo (float 0)
-                              (float 0))
-                     (.lineTo (float radius)
-                              (float (* radius 2)))
-                     (.lineTo (float (- radius))
-                              (float (* radius 2)))
-                     (.lineTo (float 0)
-                              (float 0)))]
-    (let [theta (+ (heading (:velocity b))
+(defn draw [boids]
+  (scale 1)
+  (background 255 255 255)
+  (stroke 0 0 0)
+  (stroke-weight 1)
+  (fill 57 27 224) 
+
+  (doseq [boid boids]
+    (step boid boids (width) (height))
+    (let [b @boid
+          theta (+ (heading (:velocity b))
                    (Math/toRadians 90))
-          transform (.getTransform g)]
-      (doto g
-        (.setRenderingHint java.awt.RenderingHints/KEY_ANTIALIASING
-                           java.awt.RenderingHints/VALUE_ANTIALIAS_ON)
-        (.translate (int (:x boid-location)) (int (:y boid-location)))
-        (.rotate theta)
-        (.setPaint Color/BLACK)        
-        (.draw boid-shape)
-        (.setPaint Color/BLUE)        
-        (.fill boid-shape)
-        (.setTransform transform)))))
+          boid-location (:location b)]
+      (push-matrix)
+      (translate  (int (:x boid-location)) (int (:y boid-location)))
+      (rotate theta)
+      (triangle 0 (- (* radius 2))
+                (- radius) (* radius 2)
+                radius (* radius 2))
+      (pop-matrix))))
 
-(defn mk-panel [boids boid-radius frame-width frame-height]
-  (doto (proxy [JPanel] []
-          (paint [g]
-            (let [img (new BufferedImage frame-width frame-height
-                           (. BufferedImage TYPE_INT_ARGB))
-                  bg (. img (createGraphics))]
-              (doto bg
-                (.setColor (. Color white))
-                (.fillRect 0 0 (. img (getWidth)) (. img (getHeight))))
-              (doseq [b boids]
-                (draw-boid bg b boid-radius))
-              (. g (drawImage img 0 0 nil))
-              (. bg (dispose)))))
-    (.setPreferredSize (new Dimension 
-                            frame-width
-                            frame-height))))
-
-(defn add-mouse-adapter [panel agent animate-fn running]
-  (let [adapter (proxy [MouseAdapter] []
-                  (mouseClicked [e]
-                    (if (= (.getButton e) MouseEvent/BUTTON1)
-                      (if @running
-                        (swap! running (fn [_] false))
-                        (do (swap! running (fn [_] true))
-                            (send-off agent animate-fn))))))]
-    (.addMouseListener panel adapter)))

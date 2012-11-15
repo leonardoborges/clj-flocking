@@ -9,5 +9,5 @@
 (def weight-separation 2)
 (def weight-alignment 1)
 (def weight-cohesion 1)
-(def radius 6.0)
+(def radius 3.0)
 (def desired-separation (* 6.0 radius))
